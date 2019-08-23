@@ -74,15 +74,23 @@ public class LinearApplet extends PApplet {
 	}
 	
 	private void drawGuessData() {
-		stroke(0, 200, 255);
-		line(0, 0, width, height * guessSlope);
-		strokeWeight(0.5f);
-		
 		float sumOfDistance = 0;
 		if (guessSlope > 0) {
+			stroke(0, 200, 255);
+			line(0, 0, width, height * guessSlope);
+			strokeWeight(0.5f);
 			for (PVector point : points) {
-				line(point.x, point.y, point.x, (point.x * guessSlope));
-				sumOfDistance += getDistance(point, new PVector(point.x, (point.x * guessSlope)));
+				float minDisToLine = 9999;
+				float minX = 0;
+				for (int x = 0; x < width; x += scale) {
+					float dis = getDistance(point, new PVector(x, (x * guessSlope)));
+					if (dis < minDisToLine) {
+						minDisToLine = dis;
+						minX = x;
+					}
+				}
+				line(point.x, point.y, minX, (minX * guessSlope));
+				sumOfDistance += minDisToLine;
 			}
 			if (sumOfDistance < minimumDistance) {
 				minimumDistance = sumOfDistance;
