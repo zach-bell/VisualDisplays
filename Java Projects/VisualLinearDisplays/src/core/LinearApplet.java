@@ -21,6 +21,9 @@ public class LinearApplet extends PApplet {
 			if (args[3] != null) {
 				numberOfPoints = Integer.parseInt(args[3]);
 			}
+			if (args[4] != null) {
+				windowSize = Integer.parseInt(args[4]);
+			}
 			// Catch all problems and literally ignore them
 		} catch (Exception e) {
 			System.out.println("This is the error: " + e.getMessage());
@@ -37,11 +40,12 @@ public class LinearApplet extends PApplet {
 	}
 	// Settings of applet
 	public void settings() {
-		size(1200, 1200);
+		size(windowSize, windowSize);
 	}
 	
 	// Processing Variables
 	private static int cyclesPerSecond = 60;				// Default fps 60
+	private static int windowSize = 900;
 	
 	// Graph variables
 	private static int numberOfPoints = 100;				// Default 100 points
@@ -89,8 +93,7 @@ public class LinearApplet extends PApplet {
 		// We push the matrix to perform translations without affecting the camera
 		pushMatrix();
 		rotate(PI / -2);
-		translate(-width, 0);
-		
+		translate(-height, 0);
 		// Draw Grid Lines
 		stroke(100);
 		if (drawGrid) {
