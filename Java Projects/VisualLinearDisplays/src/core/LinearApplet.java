@@ -46,6 +46,7 @@ public class LinearApplet extends PApplet {
 	// Processing Variables
 	private static int cyclesPerSecond = 60;				// Default fps 60
 	private static int windowSize = 900;
+	private boolean pause = true;
 	
 	// Graph variables
 	private static int numberOfPoints = 100;				// Default 100 points
@@ -76,6 +77,8 @@ public class LinearApplet extends PApplet {
 		for (int i = 0; i < points.length; i ++) {
 			points[i] = new PVector(x + (int) random(-pointScatter, pointScatter),
 									y + (int) random(-pointScatter, pointScatter));
+			
+			// Count points off screen during creation of the points
 			if ((points[i].x > width) | (points[i].y > height)) {
 				pointsOffScreen ++;
 			}
@@ -86,6 +89,7 @@ public class LinearApplet extends PApplet {
 		println("scale: " + scale + "\nFinished Setup...");
 	}
 	
+	// Processing main draw loop override.
 	public void draw() {
 		background(40);
 		noFill();
@@ -94,6 +98,7 @@ public class LinearApplet extends PApplet {
 		pushMatrix();
 		rotate(PI / -2);
 		translate(-height, 0);
+		
 		// Draw Grid Lines
 		stroke(100);
 		if (drawGrid) {
@@ -104,6 +109,8 @@ public class LinearApplet extends PApplet {
 				}
 			}
 		}
+		
+		// Draws borders
 		strokeWeight(4);
 		line(0, 0, width, 0);
 		line(1, 0, 1, height);
@@ -117,13 +124,18 @@ public class LinearApplet extends PApplet {
 		}
 		endShape();
 		
+		// Runs other methods of drawing
 		drawGuessData();
 		drawMinSlope();
 		
+		// We pop the camera back into place to allow for
+		// correct UI placement on the screen
 		popMatrix();
+		
 		drawUI();
 	}
 	
+	// Draws the guess in the current line
 	private void drawGuessData() {
 		float sumOfDistance = 0;
 		if (guessSlope >= 0.001) {
@@ -147,7 +159,8 @@ public class LinearApplet extends PApplet {
 				minimumDistance = sumOfDistance;
 				minimumSlope = guessSlope;
 			}
-			guessSlope -= 0.01f;
+			if (!pause)
+				guessSlope -= 0.01f;
 		} else {
 			guessSlope = 0;
 			if (toggle) {
@@ -158,12 +171,14 @@ public class LinearApplet extends PApplet {
 		}
 	}
 	
+	// Draws the min slope line
 	private void drawMinSlope() {
 		strokeWeight(2);
 		stroke(200, 0, 255);
 		line(0, 0, width, height * minimumSlope);
 	}
 	
+	// Distance formula
 	private float getDistance(PVector p1, PVector p2) {
 		return sqrt(pow((p2.x - p1.x), 2) + pow((p2.y - p1.y), 2));
 	}
@@ -174,6 +189,8 @@ public class LinearApplet extends PApplet {
 		textSize(20);
 		textAlign(RIGHT);
 		fill(255);
+
+		text("FPS: " + (int) frameRate, width - 20, 20);
 		
 		if (guessSlope >= 0.001) {	
 			text("Slope: " + guessSlope, width - 20, height - 45);
@@ -182,5 +199,45 @@ public class LinearApplet extends PApplet {
 			fill(0, 200, 255);
 		}
 		text("Min: " + minimumSlope, width - 20, height - 20);
+		
+		if (pause) {
+			stroke(255,255,0);
+			line(0, 1, width, 1);
+			fill(255,255,0);
+			textAlign(CENTER);
+			text("PAUSED \t\t Press Space to Unpause", width / 2, 20);
+		}
+	}
+	
+	// Reset slope calculation
+	private void reset() {
+		guessSlope = 4;
+		minimumDistance = 9999999;
+		minimumSlope = 1;
+		toggle = true;
+	}
+	
+	// Processing keypressed method override
+	public void keyPressed() {
+		// Spacebar
+		if (keyCode == 32) {
+			pause = !pause;
+		}
+		// Down arrow
+		if (keyCode == 40) {
+			if (cyclesPerSecond - 2 >= 2)
+				cyclesPerSecond -= 2;
+		}
+		// Up arrow
+		if (keyCode == 38) {
+			if (cyclesPerSecond + 2 <= 100)
+				cyclesPerSecond += 2;
+		}
+		// R key
+		if (keyCode == 82) {
+			reset();
+		}
+		// Set frameRate limit again
+		frameRate(cyclesPerSecond);
 	}
 }
