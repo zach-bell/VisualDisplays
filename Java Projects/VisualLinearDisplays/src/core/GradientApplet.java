@@ -14,7 +14,7 @@ public class GradientApplet extends PApplet {
 	}
 	// Settings of applet
 	public void settings() {
-		size(windowSize, windowSize);
+		size(windowSize, windowSize, P3D);
 	}
 	
 	// Processing Variables
@@ -22,9 +22,15 @@ public class GradientApplet extends PApplet {
 	private static int windowSize = 900;
 	private boolean pause = true;
 	
+	// Camera variables
+	private float cameraY = PI / 6;
+	private float cameraZ = 0;
+	private float cameraIncre = 0.0174533f;
+	private PVector initialClick;
+	private boolean isDragged = false;
+	
 	// Graph variables
-	private static int numberOfPoints = 2;				// Default 100 points
-	private PVector[] points, data;						// points are random, data is training file
+	private PVector[] data;								// data is training file
 	private float maxWeight = 0, maxHP = 0, maxMPG = 0;
 	
 	// Guess Variables
@@ -38,11 +44,7 @@ public class GradientApplet extends PApplet {
 		surface.setTitle("Visual Gradiant Decent");
 		frameRate(cyclesPerSecond);
 		
-		// Initialize points
-		points = new PVector[numberOfPoints];
-		for (int i = 0; i < points.length; i++) {
-			points[i] = new PVector(random(0, 1), random(0, 1));
-		}
+		initialClick = new PVector();
 		
 		handleFileInput();
 	}
@@ -51,30 +53,47 @@ public class GradientApplet extends PApplet {
 	public void draw() {
 		background(40);
 		noFill();
+
+		drawUI();
+		// camera translations
+		translate(width / 4, 0, -windowSize);
+		rotateY(cameraY);
+		rotateZ(cameraZ);
 		
-		// Draw points
+		// Draw 3d grid
+		strokeWeight(1);
+		stroke(150,0,0);
+		line(0, height, 0, width, height, 0);
+		line(0, height, 0, 0, 0, 0);
+		line(0, height, 0, 0, height, windowSize);
+		
+		// Draw data points
 		stroke(255);
 		strokeWeight(4);
 		
-		gradientDescent();
-//		drawPoints();
+		if (!pause) {
+			gradientDescent();
+			drawLine();
+		}
 		drawData();
-		drawLine();
 		
-		drawUI();
+		if (isDragged) {
+			cameraY += map(mouseX - initialClick.x, 0, windowSize, 0, cameraIncre);
+			if (!mousePressed) {
+				isDragged = false;
+			}
+		}
 	}
 	
 	private void gradientDescent() {
-		if (!pause) {
-			for (int i = 0; i < data.length; i++) {
-				float px = data[i].x;
-				float py = data[i].y;
-				float guess = (slope * px) + intercept;
-				float error = py - guess;
-				
-				slope = (slope + ((error * px) * alpha));
-				intercept = (intercept + (error * alpha));
-			}
+		for (int i = 0; i < data.length; i++) {
+			float px = data[i].x;
+			float py = data[i].y;
+			float guess = (slope * px) + intercept;
+			float error = py - guess;
+			
+			slope = (slope + ((error * px) * alpha));
+			intercept = (intercept + (error * alpha));
 		}
 	}
 	
@@ -94,31 +113,19 @@ public class GradientApplet extends PApplet {
 		line(x1, y1, x2, y2);
 	}
 	
-	// Draws the randomly created points
-	private void drawPoints() {
-		for (int i = 0; i < points.length; i++) {
-			float x = map(points[i].x, 0, 1, 0, width);
-			float y = map(points[i].y, 0, 1, height, 0);
-			
-			fill(150, 255, 255);
-			noStroke();
-			ellipse(x, y, 4, 4);
-		}
-	}
-	
 	// Draws the data from the fileInput
 	private void drawData() {
 		for (int i = 0; i < data.length; i++) {
 			float x = map(data[i].x, 0, 1, 0, width);
 			float y = map(data[i].y, 0, 1, height, 0);
-			float actually = map(data[i].z, 0, 1, height, 0);
-			
+			float z = map(data[i].z, 0, 1, height, 0);
+
+			pushMatrix();
+			translate(x, y, z);
 			noStroke();
 			fill(150, 255, 255);
-			ellipse(x, y, 4, 4);
-			fill(255, 255, 150);
-			ellipse(x, actually, 4, 4);
-			
+			sphere(4);
+			popMatrix();
 		}
 	}
 	
@@ -179,6 +186,14 @@ public class GradientApplet extends PApplet {
 		}
 	}
 	
+	public void mouseDragged() {
+		isDragged = true;
+	}
+	
+	public void mousePressed() {
+		initialClick = new PVector(mouseX, mouseY);
+	}
+	
 	// Processing keypressed method override
 	public void keyPressed() {
 		// Spacebar
@@ -187,13 +202,11 @@ public class GradientApplet extends PApplet {
 		}
 		// Down arrow
 		if (keyCode == 40) {
-			if (cyclesPerSecond - 2 >= 2)
-				cyclesPerSecond -= 2;
+			cameraY += 0.0174533f;
 		}
 		// Up arrow
 		if (keyCode == 38) {
-			if (cyclesPerSecond + 2 <= 100)
-				cyclesPerSecond += 2;
+			cameraY -= 0.0174533f;
 		}
 		// R key
 		if (keyCode == 82) {
