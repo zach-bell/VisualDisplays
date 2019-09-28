@@ -35,7 +35,7 @@ public class GradientApplet extends PApplet {
 	
 	// Guess Variables
 	// Try not to mess with these as they change while its running.
-	private float alpha = 0.1f;
+	private float alpha = 0.05f;
 	private float slope = 0;
 	private float intercept = 0;
 	
@@ -56,9 +56,12 @@ public class GradientApplet extends PApplet {
 
 		drawUI();
 		// camera translations
-		translate(width / 4, 0, -windowSize);
+		translate(width / 2, 0, -windowSize);
 		rotateY(cameraY);
 		rotateZ(cameraZ);
+		
+		pushMatrix();
+		translate(-width / 2, 0, -windowSize / 2);
 		
 		// Draw 3d grid
 		strokeWeight(1);
@@ -76,6 +79,7 @@ public class GradientApplet extends PApplet {
 			drawLine();
 		}
 		drawData();
+		popMatrix();
 		
 		if (isDragged) {
 			cameraY += map(mouseX - initialClick.x, 0, windowSize, 0, cameraIncre);
@@ -100,17 +104,22 @@ public class GradientApplet extends PApplet {
 	private void drawLine() {
 		float x1 = 0;
 		float y1 = slope * x1 + intercept;
+		float z1 = slope * x1;
 		float x2 = 1;
 		float y2 = slope * x2 + intercept;
+		float z2 = slope * x2 + intercept;
 		
 		x1 = map(x1, 0, 1, 0, width);
 		y1 = map(y1, 0, 1, height, 0);
+		z1 = map(z1, 0, 1, 0, windowSize);
+		
 		x2 = map(x2, 0, 1, 0, width);
 		y2 = map(y2, 0, 1, height, 0);
+		z2 = map(z2, 0, 1, 0, windowSize);
 		
 		stroke(255);
 		strokeWeight(1);
-		line(x1, y1, x2, y2);
+		line(x1, y1, z1, x2, y2, z2);
 	}
 	
 	// Draws the data from the fileInput
