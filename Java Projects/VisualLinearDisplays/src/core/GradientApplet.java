@@ -1,5 +1,6 @@
 package core;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import processing.core.PApplet;
@@ -31,6 +32,7 @@ public class GradientApplet extends PApplet {
 	
 	// Graph variables
 	private PVector[] data;								// data is training file
+	private String dataLocation = "trainingData.csv";
 	private float maxWeight = 0, maxHP = 0, maxMPG = 0;
 	
 	// Guess Variables
@@ -161,28 +163,40 @@ public class GradientApplet extends PApplet {
 	// This method takes in the trainingData.csv and organizes it cleanly
 	// It populates the data PVector array where x = weight, y = hp, z = mpg
 	private void handleFileInput() {
-		String[][] sData = FileIn.getData("res/trainingData.csv");
+		String[][] sData = FileIn.getData(dataLocation);
 		ArrayList<PVector> rawData = new ArrayList<PVector>();
 		
-		for (int i = 0; i < sData.length; i++) {
+		if (sData != null) {
 			try {
-				float x = Float.isNaN(Float.parseFloat(sData[i][0])) ? 0/0 : Float.parseFloat(sData[i][0]);
-				float y = Float.isNaN(Float.parseFloat(sData[i][1])) ? 0/0 : Float.parseFloat(sData[i][1]);
-				float z = Float.isNaN(Float.parseFloat(sData[i][2])) ? 0/0 : Float.parseFloat(sData[i][2]);
-				
-				// Check for new max values for normalizing
-				if (x > maxWeight)
-					maxWeight = x;
-				if (y > maxHP)
-					maxHP = y;
-				if (z > maxMPG)
-					maxMPG = z;
-				
-				rawData.add(new PVector(x, y, z));
-				
-			} catch(ArithmeticException e) {
-				println("NaN happened at line " + (i + 1));
+				for (int i = 0; i < sData.length; i++) {
+					try {
+						float x = Float.isNaN(Float.parseFloat(sData[i][0])) ? 0/0 : Float.parseFloat(sData[i][0]);
+						float y = Float.isNaN(Float.parseFloat(sData[i][1])) ? 0/0 : Float.parseFloat(sData[i][1]);
+						float z = Float.isNaN(Float.parseFloat(sData[i][2])) ? 0/0 : Float.parseFloat(sData[i][2]);
+						
+						// Check for new max values for normalizing
+						if (x > maxWeight)
+							maxWeight = x;
+						if (y > maxHP)
+							maxHP = y;
+						if (z > maxMPG)
+							maxMPG = z;
+						
+						rawData.add(new PVector(x, y, z));
+						
+					} catch(ArithmeticException e) {
+						println("NaN happened at line " + (i + 1));
+					}
+				}
+			}  catch(Exception e) {
+				println("Some other kind of error happened where the data was pure garbage.\n"
+						+ e.getMessage());
+
+				selectInput("Select a CSV file", "fileSelected");
 			}
+		} else {
+			println("There is no data file.");
+			selectInput("Select a CSV file", "fileSelected");
 		}
 		
 		data = new PVector[rawData.size()];
@@ -192,6 +206,17 @@ public class GradientApplet extends PApplet {
 			float z = map(rawData.get(i).z, 0, maxMPG, 0, 1);
 			
 			data[i] = new PVector(x, y, z);
+		}
+	}
+	
+	public void fileSelected(File selection) {
+		if (selection == null) {
+			println("User didn't select a cool file.");
+			selectInput("Alright... a CSV file this time...", "fileSelected");
+		} else {
+			println("File: " + selection.getAbsolutePath());
+			dataLocation = selection.getAbsolutePath();
+			handleFileInput();
 		}
 	}
 	
